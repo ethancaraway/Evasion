@@ -1,0 +1,19 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\RulesMenu.cs">
+    <Files>
+      <File FileName="Assets\Scripts\Ability.cs" Line="1131" Column="102" />
+      <File FileName="Assets\Scripts\Piece.cs" Line="17" Column="14" />
+      <File FileName="Assets\Scripts\Tile.cs" Line="496" Column="99" />
+      <File FileName="Assets\Scripts\Info.cs" Line="299" Column="4" />
+      <File FileName="Assets\Scripts\StartGameMenu.cs" Line="275" Column="45" />
+      <File FileName="Assets\Scripts\SelectMenu.cs" Line="475" Column="83" />
+      <File FileName="Assets\Scripts\Settings.cs" Line="209" Column="91" />
+      <File FileName="Assets\Scripts\RulesMenu.cs" Line="116" Column="1320" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
