@@ -18,9 +18,9 @@ public class Info : MonoBehaviour
 
 	//Ability information
 	public static Ability [ ] player1AbilityList = new Ability [ 3 ];
-	public static List < PieceColor > player1SacrificeList = new List < PieceColor > ( );
+	public static PieceColor player1Sacrifice;
 	public static Ability [ ] player2AbilityList = new Ability [ 3 ];
-	public static List < PieceColor > player2SacrificeList = new List < PieceColor > ( );
+	public static PieceColor player2Sacrifice;
 	public Ability abilityInUse;
 
 	//Board information
@@ -86,8 +86,8 @@ public class Info : MonoBehaviour
 	private Vector3 [ ] tempSaveP1Abilities = new Vector3 [ 3 ];
 	private Vector3 [ ] tempSaveP2Abilities = new Vector3 [ 3 ];
 	private Vector3 [ ] tempSavePieces = new Vector3 [ 12 ];
-	private Vector2 tempSaveP1SacrificePieces;
-	private Vector2 tempSaveP2SacrificePieces;
+	private int tempSaveP1Sacrifice;
+	private int tempSaveP2Sacrifice;
 	private float tempSaveP1GameClock;
 	private float tempSaveP2GameClock;
 
@@ -128,31 +128,25 @@ public class Info : MonoBehaviour
 			opponent = player2;
 
 			//Sacrifice any pieces on the list
-			if ( player1SacrificeList.Count > 0 )
+			if ( player1Sacrifice != null && player1Sacrifice != PieceColor.None )
 			{
-				foreach ( PieceColor c in player1SacrificeList )
-				{
-					//Store piece
-					Piece p = player1.pieces.Find ( x => x.color == c );
-					player1.pieces.Remove ( p );
-					p.Capture ( );
-				}
+				//Store piece
+				Piece p = player1.pieces.Find ( x => x.color == player1Sacrifice );
+				player1.pieces.Remove ( p );
+				p.Capture ( );
 			}
-			if ( player2SacrificeList.Count > 0 )
+			if ( player2Sacrifice != null && player2Sacrifice != PieceColor.None )
 			{
-				foreach ( PieceColor c in player2SacrificeList )
-				{
-					//Store piece
-					Piece p = player2.pieces.Find ( x => x.color == c );
-					player2.pieces.Remove ( p );
-					p.Capture ( );
-				}
+				//Store piece
+				Piece p = player2.pieces.Find ( x => x.color == player2Sacrifice );
+				player2.pieces.Remove ( p );
+				p.Capture ( );
 			}
 		}
 
-		//Hide zap areas
-		player1.zapArea.SetActive ( false );
-		player2.zapArea.SetActive ( false );
+		//Hide goal areas
+		player1.goalArea.SetActive ( false );
+		player2.goalArea.SetActive ( false );
 
 		//Store UI
 		player1.endButton.SetActive ( false );
@@ -183,8 +177,7 @@ public class Info : MonoBehaviour
 		}
 
 		//Open settings menu
-		popupPanel.gameObject.SetActive ( true );
-		settingsPanel.SetActive ( true );
+		PauseGame ( );
 
 		//Check layout settings
 		if ( Settings.LayoutIsVertical )
@@ -200,7 +193,7 @@ public class Info : MonoBehaviour
 		OnSoundSettingChange ( Settings.SoundVolume * 100 );
 
 		//Start game
-		ResumeGame ( );
+		ResumeGame ( false );
 		EnableAbilityButtons ( );
 		beginningOfTurn = true;
 		AnimateIntro ( );
@@ -250,7 +243,7 @@ public class Info : MonoBehaviour
 		{
 			//Pause/Unpause the game
 			if ( popupPanel.gameObject.activeSelf )
-				ResumeGame ( );
+				ResumeGame ( false );
 			else
 				PauseGame ( );
 		}
@@ -286,10 +279,10 @@ public class Info : MonoBehaviour
 	private void LoadSaveGame ( )
 	{
 		//Load player 1's abilities and game clock
-		LoadSavedPlayerAbilities ( player1, player1AbilityList, Settings.SaveDataP1Abilities, player1SacrificeList, Settings.SaveDataP1SacrificePieces );
+		LoadSavedPlayerAbilities ( player1, player1AbilityList, Settings.SaveDataP1Abilities, Settings.SaveDataP1Sacrifice );
 
 		//Load player 2's abilities and game clock
-		LoadSavedPlayerAbilities ( player2, player2AbilityList, Settings.SaveDataP2Abilities, player2SacrificeList, Settings.SaveDataP2SacrificePieces );
+		LoadSavedPlayerAbilities ( player2, player2AbilityList, Settings.SaveDataP2Abilities, Settings.SaveDataP2Sacrifice );
 
 		//Remove any tile references from the pieces
 		foreach ( Piece p in player1.pieces )
@@ -455,7 +448,7 @@ public class Info : MonoBehaviour
 	/// <summary>
 	/// Loads the player's abilities and game clock from the save data.
 	/// </summary>
-	private void LoadSavedPlayerAbilities ( Player player, Ability [ ] abilities, Vector3 [ ] data, List < PieceColor > sacrifices, Vector2 sacrificeData )
+	private void LoadSavedPlayerAbilities ( Player player, Ability [ ] abilities, Vector3 [ ] data, int sacrificeData )
 	{
 		//Load each of the player's abilities
 		for ( int i = 0; i < data.Length; i++ )
@@ -509,13 +502,11 @@ public class Info : MonoBehaviour
 				//Check for sacrifice
 				if ( player.abilities [ i ].ID == Ability.AbilityList.Sacrifice.ID )
 				{
-					//Extract save data
-					int p1 = (int)sacrificeData.x;
-					int p2 = (int)sacrificeData.y;
-
 					//Store save data
-					sacrifices.Add ( (PieceColor)p1 );
-					sacrifices.Add ( (PieceColor)p2 );
+					if ( player == player1 )
+						player1Sacrifice = (PieceColor)sacrificeData;
+					else
+						player2Sacrifice = (PieceColor)sacrificeData;
 				}
 			}
 			else if ( player.abilities [ i ].ID == Ability.AbilityList.NonagressionPact.ID && !player.abilities [ i ].IsActive )
@@ -666,9 +657,9 @@ public class Info : MonoBehaviour
 		foreach ( Tile t in board )
 			t.ResetColor ( );
 
-		//Hide zap areas
-		player1.zapArea.SetActive ( false );
-		player2.zapArea.SetActive ( false );
+		//Hide goal areas
+		player1.goalArea.SetActive ( false );
+		player2.goalArea.SetActive ( false );
 	}
 
 	/// <summary>
@@ -817,6 +808,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void UseAbility ( int slot )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Unselect current piece
 		selectedPiece = null;
 
@@ -885,6 +879,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void CancelAbilityUse ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Enable ability use button
 		EnableAbilityButtons ( );
 
@@ -916,6 +913,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void AcceptAbilityUse ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Hide cancel buttons
 		currentPlayer.cancelButton.SetActive ( false );
 		
@@ -1020,6 +1020,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void OnEndTurnClick ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//End the turn
 		EndTurn ( true );
 	}
@@ -1286,15 +1289,10 @@ public class Info : MonoBehaviour
 		}
 
 		//Save sacrifice pieces
-		if ( player1SacrificeList.Count > 0 )
-		{
-			//Store pieces
-			int p1 = (int)player1SacrificeList [ 0 ];
-			int p2 = (int)player1SacrificeList [ 1 ];
-			tempSaveP1SacrificePieces = new Vector2 ( (float)p1, (float)p2 );
-		}
+		if ( player1Sacrifice != null )
+			tempSaveP1Sacrifice = (int)player1Sacrifice;
 		else
-			tempSaveP1SacrificePieces = Vector2.zero;
+			tempSaveP1Sacrifice = 0;
 		
 		//Save each of player 2's abilities
 		for ( int i = 0; i < player2.abilities.Length; i++ )
@@ -1343,15 +1341,10 @@ public class Info : MonoBehaviour
 		}
 
 		//Save sacrifice pieces
-		if ( player2SacrificeList.Count > 0 )
-		{
-			//Store pieces
-			int p1 = (int)player2SacrificeList [ 0 ];
-			int p2 = (int)player2SacrificeList [ 1 ];
-			tempSaveP2SacrificePieces = new Vector2 ( (float)p1, (float)p2 );
-		}
+		if ( player2Sacrifice != null )
+			tempSaveP2Sacrifice = (int)player2Sacrifice;
 		else
-			tempSaveP2SacrificePieces = Vector2.zero;
+			tempSaveP2Sacrifice = 0;
 		
 		//Save the position of each player's pieces
 		for ( int i = 0; i < player1.pieces.Count; i++ )
@@ -1503,9 +1496,20 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void Rematch ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Restart the match
 		MusicManager.instance.ChangeMusic ( AudioContext.Gameplay );
-		Application.LoadLevel ( "Game Board" );
+
+		//Fade out
+		exitFade.gameObject.SetActive ( true );
+		exitFade.DOFade ( 0, EXIT_TIME ).From ( )
+			.OnComplete ( () =>
+			{
+				//Load main menu
+				Application.LoadLevel ( "Game Board" );
+			} );
 	}
 
 	/// <summary>
@@ -1513,6 +1517,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void MainMenu ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Wipe abilities
 		for ( int i = 0; i < player1AbilityList.Length; i++ )
 		{
@@ -1521,8 +1528,8 @@ public class Info : MonoBehaviour
 		}
 
 		//Clear any sacrifice pieces
-		player1SacrificeList.Clear ( );
-		player2SacrificeList.Clear ( );
+		player1Sacrifice = PieceColor.None;
+		player2Sacrifice = PieceColor.None;
 
 		//Change music
 		MusicManager.instance.ChangeMusic ( AudioContext.MainMenu );
@@ -1563,6 +1570,19 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void ResumeGame ( ) 
 	{
+		//Play SFX
+		ResumeGame ( true );
+	}
+
+	/// <summary>
+	/// Closes the pause menu.
+	/// </summary>
+	public void ResumeGame ( bool playSFX ) 
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
+
 		//Play animations
 		DOTween.TogglePauseAll ( );
 
@@ -1579,6 +1599,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void SaveGame ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Save the player's turn
 		Settings.SaveDataIsP1Turn = tempSaveIsP1Turn;
 		PlayerPrefsX.SetBool ( "playerTurn", Settings.SaveDataIsP1Turn );
@@ -1596,10 +1619,10 @@ public class Info : MonoBehaviour
 		PlayerPrefsX.SetVector3Array ( "pieces", Settings.SaveDataPieces );
 
 		//Save sacrifice pieces
-		Settings.SaveDataP1SacrificePieces = tempSaveP1SacrificePieces;
-		PlayerPrefsX.SetVector2 ( "player1Sacrifice", Settings.SaveDataP1SacrificePieces );
-		Settings.SaveDataP2SacrificePieces = tempSaveP2SacrificePieces;
-		PlayerPrefsX.SetVector2 ( "player2Sacrifice", Settings.SaveDataP2SacrificePieces );
+		Settings.SaveDataP1Sacrifice = tempSaveP1Sacrifice;
+		PlayerPrefs.SetInt ( "player1Sacrifice", Settings.SaveDataP1Sacrifice );
+		Settings.SaveDataP2Sacrifice = tempSaveP2Sacrifice;
+		PlayerPrefs.SetInt ( "player2Sacrifice", Settings.SaveDataP2Sacrifice );
 
 		//Save the game clock
 		Settings.SaveDataGameClock = Settings.GameClock;
@@ -1619,6 +1642,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void SettingsMenu ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Hide the pause menu
 		pausePanel.SetActive ( false );
 
@@ -1631,6 +1657,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void OnHorizontalSettingClick ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Set board layout as horizontal
 		Settings.LayoutIsVertical = false;
 		
@@ -1657,6 +1686,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void OnVerticalSettingClick ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Set board layout as vertical
 		Settings.LayoutIsVertical = true;
 		
@@ -1721,6 +1753,7 @@ public class Info : MonoBehaviour
 		
 		//Set sound volume
 		Settings.SoundVolume = value / 100;
+		SFXManager.instance.UpdateSFXVolume ( );
 		
 		//Save setting
 		PlayerPrefs.SetFloat ( "soundVolume", Settings.SoundVolume );
@@ -1731,6 +1764,9 @@ public class Info : MonoBehaviour
 	/// </summary>
 	public void OnBackButtonClick ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Hide the settings menu
 		settingsPanel.SetActive ( false );
 

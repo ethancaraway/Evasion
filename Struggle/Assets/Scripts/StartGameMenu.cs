@@ -90,7 +90,7 @@ public class StartGameMenu : MonoBehaviour
 		Info.IsLoadingSavedGame = false;
 
 		//Open new game menu
-		OnMenuButtonClick ( menuButtons [ 0 ] );
+		OnMenuButtonClick ( menuButtons [ 0 ], false );
 
 		//Play intro
 		AnimateIntro ( );
@@ -169,81 +169,91 @@ public class StartGameMenu : MonoBehaviour
 	{
 		//Check input
 		if ( allowInput )
+			OnMenuButtonClick ( b, true );
+	}
+
+	/// <summary>
+	/// Opens a menu in the Start Game menu screen.
+	/// </summary>
+	private void OnMenuButtonClick ( Button b, bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
+
+		//Unselect any previously selected button
+		foreach ( Button a in menuButtons )
+			a.colors = unselected;
+		
+		//Select current button
+		b.colors = selected;
+
+		//Display information panel
+		foreach ( CanvasGroup p in menuPanels )
 		{
-			//Unselect any previously selected button
-			foreach ( Button a in menuButtons )
-				a.colors = unselected;
+			if ( p != menuInfo [ b ] )
+				p.gameObject.SetActive ( false );
+			else
+				p.gameObject.SetActive ( true );
+		}
+
+		//Hide save data
+		saveData.SetActive ( false );
+
+		//Check button
+		if ( b == menuButtons [ 0 ] )
+		{
+			//Display layout
+			if ( Settings.LayoutIsVertical )
+				layoutPrompt.text = "Vertical Board Layout";
+			else
+				layoutPrompt.text = "Horizontal Board Layout";
+
+			//Display game clock
+			if ( Settings.GameClock != 0 )
+				gameClockPrompt.text = Settings.GameClock + ":00 Game Clock";
+			else
+				gameClockPrompt.text = "No Game Clock";
+		}
+		else if ( b == menuButtons [ 1 ] )
+		{
+			//Display save data
+			saveData.SetActive ( true );
+
+			//Load player 1's abilities
+			LoadGamePlayerPreview ( player1, Settings.SaveDataP1Abilities, Settings.SaveDataP1GameClock );
+
+			//Load player 2's abilities
+			LoadGamePlayerPreview ( player2, Settings.SaveDataP2Abilities, Settings.SaveDataP2GameClock );
+
+			//Load board
+			LoadGameBoardPreview ( );
+		}
+		else if ( b == menuButtons [ 2 ] )
+		{
+			//Check layout settings
+			if ( Settings.LayoutIsVertical )
+			{
+				//Set toggle to vertical
+				ExecuteEvents.Execute ( verticalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
+			}
+			else
+			{
+				//Set toggle to horizontal
+				ExecuteEvents.Execute ( horizontalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
+			}
 			
-			//Select current button
-			b.colors = selected;
-
-			//Display information panel
-			foreach ( CanvasGroup p in menuPanels )
-			{
-				if ( p != menuInfo [ b ] )
-					p.gameObject.SetActive ( false );
-				else
-					p.gameObject.SetActive ( true );
-			}
-
-			//Hide save data
-			saveData.SetActive ( false );
-
-			//Check button
-			if ( b == menuButtons [ 0 ] )
-			{
-				//Display layout
-				if ( Settings.LayoutIsVertical )
-					layoutPrompt.text = "Vertical Board Layout";
-				else
-					layoutPrompt.text = "Horizontal Board Layout";
-
-				//Display game clock
-				if ( Settings.GameClock != 0 )
-					gameClockPrompt.text = Settings.GameClock + ":00 Game Clock";
-				else
-					gameClockPrompt.text = "No Game Clock";
-			}
-			else if ( b == menuButtons [ 1 ] )
-			{
-				//Display save data
-				saveData.SetActive ( true );
-
-				//Load player 1's abilities
-				LoadGamePlayerPreview ( player1, Settings.SaveDataP1Abilities, Settings.SaveDataP1GameClock );
-
-				//Load player 2's abilities
-				LoadGamePlayerPreview ( player2, Settings.SaveDataP2Abilities, Settings.SaveDataP2GameClock );
-
-				//Load board
-				LoadGameBoardPreview ( );
-			}
-			else if ( b == menuButtons [ 2 ] )
-			{
-				//Check layout settings
-				if ( Settings.LayoutIsVertical )
-				{
-					//Set toggle to vertical
-					ExecuteEvents.Execute ( verticalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
-				}
-				else
-				{
-					//Set toggle to horizontal
-					ExecuteEvents.Execute ( horizontalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
-				}
-				
-				//Load music volume
-				OnMusicSettingChange ( Settings.MusicVolume * 100 );
-				
-				//Load sound volume
-				OnSoundSettingChange ( Settings.SoundVolume * 100 );
-				
-				//Load game clock start time
-				float startTime = 0;
-				if ( Settings.GameClock != 0 )
-					startTime = ( 35 - Settings.GameClock ) / 5;
-				OnTimerSettingChange ( startTime );
-			}
+			//Load music volume
+			OnMusicSettingChange ( Settings.MusicVolume * 100 );
+			
+			//Load sound volume
+			OnSoundSettingChange ( Settings.SoundVolume * 100 );
+			
+			//Load game clock start time
+			float startTime = 0;
+			if ( Settings.GameClock != 0 )
+				startTime = ( 35 - Settings.GameClock ) / 5;
+			OnTimerSettingChange ( startTime );
 		}
 	}
 
@@ -255,8 +265,8 @@ public class StartGameMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Load ability selection
-			MusicManager.instance.ChangeMusic ( AudioContext.AbilitySelection );
+			//Play SFX
+			SFXManager.instance.Click ( );
 
 			//Play outro
 			AnimateOutro ( MenuDestinations.AbilitySelection );
@@ -490,7 +500,10 @@ public class StartGameMenu : MonoBehaviour
 		{
 			//Set the loading save game check
 			Info.IsLoadingSavedGame = true;
-			
+		
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Load save game
 			MusicManager.instance.ChangeMusic ( AudioContext.Gameplay );
 
@@ -507,6 +520,9 @@ public class StartGameMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Set empty save data
 			Settings.SaveDataIsP1Turn = true;
 			PlayerPrefsX.SetBool ( "playerTurn", Settings.SaveDataIsP1Turn );
@@ -533,7 +549,7 @@ public class StartGameMenu : MonoBehaviour
 			menuInfo [ b ].gameObject.SetActive ( false );
 
 			//Open new game menu
-			OnMenuButtonClick ( menuButtons [ 0 ] );
+			OnMenuButtonClick ( menuButtons [ 0 ], false );
 		}
 	}
 
@@ -544,7 +560,14 @@ public class StartGameMenu : MonoBehaviour
 	{
 		//Load main menu
 		if ( allowInput )
+		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
+			//Transition to the main menu
+			MusicManager.instance.ChangeMusic ( AudioContext.MainMenu );
 			AnimateOutro ( MenuDestinations.MainMenu );
+		}
 	}
 
 	/// <summary>
@@ -555,6 +578,9 @@ public class StartGameMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Set board layout as horizontal
 			Settings.LayoutIsVertical = false;
 			
@@ -571,6 +597,9 @@ public class StartGameMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Set board layout as vertical
 			Settings.LayoutIsVertical = true;
 			
@@ -618,6 +647,7 @@ public class StartGameMenu : MonoBehaviour
 			
 			//Set sound volume
 			Settings.SoundVolume = value / 100;
+			SFXManager.instance.UpdateSFXVolume ( );
 			
 			//Save setting
 			PlayerPrefs.SetFloat ( "soundVolume", Settings.SoundVolume );

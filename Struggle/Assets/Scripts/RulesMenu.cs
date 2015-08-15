@@ -38,8 +38,8 @@ public class RulesMenu : MonoBehaviour
 	private ColorBlock unselected;
 
 	//Menu text
-	private string [ ] titles = new string [ 6 ];
-	private string [ ] descs = new string [ 6 ];
+	private string [ ] titles = new string [ 5 ];
+	private string [ ] descs = new string [ 5 ];
 
 	//Ability information
 	private Dictionary < Button, Ability > selectedAbility = new Dictionary < Button, Ability > ( );
@@ -84,7 +84,7 @@ public class RulesMenu : MonoBehaviour
 		InitText ( );
 
 		//Select Overview menu first
-		OnMenuClick ( menuButtons [ 0 ] );
+		OnMenuClick ( menuButtons [ 0 ], false );
 
 		//Play intro
 		AnimateIntro ( rulesPanel, infoPanel );
@@ -101,22 +101,18 @@ public class RulesMenu : MonoBehaviour
 		
 		//Load objective
 		titles [ 1 ] = "Objective";
-		descs [ 1 ] = "A player can win in one of two ways. If a player captures the opponent's white piece or if a player's white piece reaches the opposite end of the board, the player will win the game.";
+		descs [ 1 ] = "A player can win in one of two ways. If a player captures the opponent's white piece or if a player's white piece reaches the last three rows of tiles on the opposite end of the board, the player will win the game.";
 		
 		//Load movement
 		titles [ 2 ] = "Movement";
 		descs [ 2 ] = "A player is allowed to move one piece per turn. A piece can move in a number of difference ways but must obey two fundemental rules. Pieces cannot move backwards, and pieces can only move to tiles that are unoccupied by any other piece. When a player selects a piece to move, any tiles that piece can move to will be highlighted blue.\nFirst, a piece can move to any adjacent, unoccupied tile. Once a piece has moved to an adjacent tile, the player's turn is over.\nSecond, if an adjacent tile is occupied by a piece and the next tile in that direction is unoccupied, a piece can jump the adjacent piece and land on the unoccupied tile (the same as in Checkers). After a jump, the piece is allowed to continue jumping pieces if an additional jump is available to the piece. A player's turn ends when the piece has no more jumps available or when the player chooses to stop moving.\nA piece is allowed to jump both the player's pieces and the opponent's pieces. If the player jumps an opponent's piece, the opponent's piece is captured and removed from the board. Tiles occupied by an opponent's piece that the player's selected piece can capture will be highlighted red to indicate a potential capture.";
-		
-		//Load zapping
-		titles [ 3 ] = "Zapping";
-		descs [ 3 ] = "The last four rows on the opposite end of the board are known as the zapping area. Tiles in the zapping area are marked by a white outline around the tile when the player selects the white piece to move. Any time the player's white piece moves and lands within the zapping area, zapping occurs. When zapping occurs, any of the opponent's pieces in the last three rows are instantly captured. Any abilities that the opponent's pieces may have are ignored when being zapped.";
-		
+
 		//Load abilities
-		titles [ 4 ] = "Abilities";
-		descs [ 4 ] = "At the beginning of the game, each player chooses three abilities to use for that game. Each ability changes the rules of the game in ways that benefit the player.\nSome abilities are assigned to a singular piece. Pieces can only be granted one ability per game, however, the player's white piece is not allowed to have any abilities. When a piece is granted an ability, only that piece is allowed to use the ability. If that piece is captured, the ability is disabled, and the player can no longer use the ability. If the ability affects the piece's movement, any tiles the piece can move to using the ability will be highlighted purple when the piece is selected to move.\nOther abilities are not assigned to a singular piece. These global abilities can be used on multiple pieces. These abilities must be used at the beginning of a turn before any pieces have moved. Some of these abilities can only be used once per game, and once they are used, the ability is disabled.\nBoth of the players' chosen abilities are always displayed on screen. A player can hover the mouse over the name of an ability at any time to view the ability's description. When an ability is disabled, the name of the ability will turn grey to indicate that the player can no longer use the ability. If an ability is assigned to a specific piece, the color of the piece will be displayed next to the name of the ability. If an ability is a global ability, a Use Button will be displayed next to the name of the ability. The player can click the Use Button to activate the ability on that turn. A grey Use Button indicates that the ability is not available to use at that time.";
+		titles [ 3 ] = "Abilities";
+		descs [ 3 ] = "At the beginning of the game, each player chooses three abilities to use for that game. Each ability changes the rules of the game in ways that benefit the player.\nSome abilities are assigned to a singular piece. Pieces can only be granted one ability per game, however, the player's white piece is not allowed to have any abilities. When a piece is granted an ability, only that piece is allowed to use the ability. If that piece is captured, the ability is disabled, and the player can no longer use the ability. If the ability affects the piece's movement, any tiles the piece can move to using the ability will be highlighted purple when the piece is selected to move.\nOther abilities are not assigned to a singular piece. These global abilities can be used on multiple pieces. These abilities must be used at the beginning of a turn before any pieces have moved. Some of these abilities can only be used once per game, and once they are used, the ability is disabled.\nBoth of the players' chosen abilities are always displayed on screen. A player can hover the mouse over the name of an ability at any time to view the ability's description. When an ability is disabled, the name of the ability will turn grey to indicate that the player can no longer use the ability. If an ability is assigned to a specific piece, the color of the piece will be displayed next to the name of the ability. If an ability is a global ability, a Use Button will be displayed next to the name of the ability. The player can click the Use Button to activate the ability on that turn. A grey Use Button indicates that the ability is not available to use at that time.";
 		//Load credits
-		titles [ 5 ] = "Credits";
-		descs [ 5 ] = "Producer\n<color=#c8c8c8>Ethan Caraway</color>\n\nDesigners\n<color=#c8c8c8>Jesse Clifton\nElijah Cohen\nJames Krause</color>\n\nProgrammer\n<color=#c8c8c8>Ethan Caraway</color>\n\nAudio\n<color=#c8c8c8>Ryan Travis</color>\n\nSpecial Thanks\n<color=#c8c8c8>Elizabeth Clausen\nDemigiant\nUnity</color>";
+		titles [ 4 ] = "Credits";
+		descs [ 4 ] = "Producer\n<color=#c8c8c8>Ethan Caraway</color>\n\nDesigners\n<color=#c8c8c8>Jesse Clifton\nElijah Cohen\nJames Krause</color>\n\nProgrammer\n<color=#c8c8c8>Ethan Caraway</color>\n\nAudio\n<color=#c8c8c8>Ryan Travis</color>\n\nSpecial Thanks\n<color=#c8c8c8>Elizabeth Clausen\nDemigiant\nUnity</color>";
 	}
 
 	/// <summary>
@@ -178,7 +174,7 @@ public class RulesMenu : MonoBehaviour
 						scroll.value = 1;
 						
 						//Display first ability
-						OnAbilityClick ( abilityButtons [ 0 ] );
+						OnAbilityClick ( abilityButtons [ 0 ], false );
 
 						//Play intro
 						AnimateIntro ( abilitiesPanel, fading );
@@ -191,7 +187,7 @@ public class RulesMenu : MonoBehaviour
 						rulesPanel.gameObject.SetActive ( true );
 						
 						//Display overview
-						OnMenuClick ( menuButtons [ 4 ] );
+						OnMenuClick ( menuButtons [ 3 ], false );
 
 						//Play intro
 						AnimateIntro ( rulesPanel, fading );
@@ -212,83 +208,93 @@ public class RulesMenu : MonoBehaviour
 	{
 		//Check input
 		if ( allowInput )
+			OnMenuClick ( b, true );
+	}
+
+	/// <summary>
+	/// Opens a menu in the How To Play menu screen.
+	/// </summary>
+	private void OnMenuClick ( Button b, bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
+
+		//Unselect any previously selected button
+		foreach ( Button a in menuButtons )
+			a.colors = unselected;
+
+		//Select current button
+		b.colors = selected;
+
+		//Search for selected button
+		for ( int i = 0; i < menuButtons.Length; i++ )
 		{
-			//Unselect any previously selected button
-			foreach ( Button a in menuButtons )
-				a.colors = unselected;
+			//Check button
+			if ( menuButtons [ i ] != b )
+				continue;
 
-			//Select current button
-			b.colors = selected;
-
-			//Search for selected button
-			for ( int i = 0; i < menuButtons.Length; i++ )
+			//Check if the settings button is selected
+			if ( i == 5 )
 			{
-				//Check button
-				if ( menuButtons [ i ] != b )
-					continue;
+				//Hide the info panel
+				infoPanel.gameObject.SetActive ( false );
 
-				//Check if the settings button is selected
-				if ( i == 6 )
+				//Display the settings panel
+				settingsPanel.gameObject.SetActive ( true );
+
+				//Check layout settings
+				if ( Settings.LayoutIsVertical )
 				{
-					//Hide the info panel
-					infoPanel.gameObject.SetActive ( false );
-
-					//Display the settings panel
-					settingsPanel.gameObject.SetActive ( true );
-
-					//Check layout settings
-					if ( Settings.LayoutIsVertical )
-					{
-						//Set toggle to vertical
-						ExecuteEvents.Execute ( verticalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
-					}
-					else
-					{
-						//Set toggle to horizontal
-						ExecuteEvents.Execute ( horizontalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
-					}
-
-					//Load music volume
-					OnMusicSettingChange ( Settings.MusicVolume * 100 );
-
-					//Load sound volume
-					OnSoundSettingChange ( Settings.SoundVolume * 100 );
-
-					//Load game clock start time
-					float startTime = 0;
-					if ( Settings.GameClock != 0 )
-						startTime = ( 35 - Settings.GameClock ) / 5;
-					OnTimerSettingChange ( startTime );
+					//Set toggle to vertical
+					ExecuteEvents.Execute ( verticalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
 				}
 				else
 				{
-					//Display the info panel
-					infoPanel.gameObject.SetActive ( true );
-
-					//Hide the settings panel
-					settingsPanel.gameObject.SetActive ( false );
-
-					//Load menu title
-					titleText.text = titles [ i ];
-
-					//Load menu description
-					descText.text = descs [ i ];
-
-					//Check if the ability button is selected
-					if ( i == 4 )
-					{
-						//Make the ability button visible
-						abilityButton.gameObject.SetActive ( true );
-					}
-					else
-					{
-						//Make the ability button invisible
-						abilityButton.gameObject.SetActive ( false );
-					}
-
-					//Finish search
-					break;
+					//Set toggle to horizontal
+					ExecuteEvents.Execute ( horizontalLayout.gameObject, new PointerEventData ( EventSystem.current ), ExecuteEvents.pointerClickHandler );
 				}
+
+				//Load music volume
+				OnMusicSettingChange ( Settings.MusicVolume * 100 );
+
+				//Load sound volume
+				OnSoundSettingChange ( Settings.SoundVolume * 100 );
+
+				//Load game clock start time
+				float startTime = 0;
+				if ( Settings.GameClock != 0 )
+					startTime = ( 35 - Settings.GameClock ) / 5;
+				OnTimerSettingChange ( startTime );
+			}
+			else
+			{
+				//Display the info panel
+				infoPanel.gameObject.SetActive ( true );
+
+				//Hide the settings panel
+				settingsPanel.gameObject.SetActive ( false );
+
+				//Load menu title
+				titleText.text = titles [ i ];
+
+				//Load menu description
+				descText.text = descs [ i ];
+
+				//Check if the ability button is selected
+				if ( i == 3 )
+				{
+					//Make the ability button visible
+					abilityButton.gameObject.SetActive ( true );
+				}
+				else
+				{
+					//Make the ability button invisible
+					abilityButton.gameObject.SetActive ( false );
+				}
+
+				//Finish search
+				break;
 			}
 		}
 	}
@@ -301,6 +307,9 @@ public class RulesMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Change music
 			MusicManager.instance.ChangeMusic ( AudioContext.MainMenu );
 
@@ -319,7 +328,13 @@ public class RulesMenu : MonoBehaviour
 	{
 		//Play outro
 		if ( allowInput )
+		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
+			//Transition to view abilities
 			AnimateOutro ( rulesPanel, infoPanel, MenuDestinations.RulesToAbilites );
+		}
 	}
 
 	/// <summary>
@@ -329,20 +344,30 @@ public class RulesMenu : MonoBehaviour
 	{
 		//Check input
 		if ( allowInput )
-		{
-			//Unselect any previously selected button
-			foreach ( Button a in abilityButtons )
-				a.colors = unselected;
-			
-			//Select current button
-			b.colors = selected;
+			OnAbilityClick ( b, true );	
+	}
 
-			//Load ability name
-			titleText.text = selectedAbility [ b ].Name;
+	/// <summary>
+	/// Displays the desciption for the selected ability.
+	/// </summary>
+	private void OnAbilityClick ( Button b, bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
 
-			//Load ability description
-			descText.text = selectedAbility [ b ].Desc;
-		}
+		//Unselect any previously selected button
+		foreach ( Button a in abilityButtons )
+			a.colors = unselected;
+		
+		//Select current button
+		b.colors = selected;
+
+		//Load ability name
+		titleText.text = selectedAbility [ b ].Name;
+
+		//Load ability description
+		descText.text = selectedAbility [ b ].Desc;
 	}
 
 	/// <summary>
@@ -352,7 +377,13 @@ public class RulesMenu : MonoBehaviour
 	{
 		//Play outro
 		if ( allowInput )
+		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
+			//Transition to how to play
 			AnimateOutro ( abilitiesPanel, infoPanel, MenuDestinations.AbilitiesToRules );
+		}
 	}
 
 	/// <summary>
@@ -363,6 +394,9 @@ public class RulesMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Set board layout as horizontal
 			Settings.LayoutIsVertical = false;
 			
@@ -379,6 +413,9 @@ public class RulesMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Set board layout as vertical
 			Settings.LayoutIsVertical = true;
 			
@@ -426,6 +463,7 @@ public class RulesMenu : MonoBehaviour
 			
 			//Set sound volume
 			Settings.SoundVolume = value / 100;
+			SFXManager.instance.UpdateSFXVolume ( );
 			
 			//Save setting
 			PlayerPrefs.SetFloat ( "soundVolume", Settings.SoundVolume );

@@ -95,7 +95,11 @@ public class MainMenu : MonoBehaviour
 	{
 		//Load new game
 		if ( allowInput )
+		{
+			SFXManager.instance.Click ( );
+			MusicManager.instance.ChangeMusic ( AudioContext.AbilitySelection );
 			AnimateTiles ( MenuDestinations.StartGame );
+		}
 	}
 
 	/// <summary>
@@ -106,6 +110,7 @@ public class MainMenu : MonoBehaviour
 		//Load rules
 		if ( allowInput )
 		{
+			SFXManager.instance.Click ( );
 			MusicManager.instance.ChangeMusic ( AudioContext.HowToPlay );
 			AnimateTiles ( MenuDestinations.HowToPlay );
 		}
@@ -118,6 +123,9 @@ public class MainMenu : MonoBehaviour
 	{
 		//Exit game
 		if ( allowInput )
+		{
+			SFXManager.instance.Click ( );
 			AnimateTiles ( MenuDestinations.Quit );
+		}
 	}
 }

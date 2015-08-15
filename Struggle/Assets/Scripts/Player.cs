@@ -17,9 +17,7 @@ public class Player : MonoBehaviour
 	public bool clockIsActive = false;
 
 	//Player's board game objects
-	public Tile goal;
-	public GameObject zapArea;
-	public Tile [ ] zapTiles;
+	public GameObject goalArea;
 
 	//Player's HUD game objects
 	public Text [ ] abilityNames;

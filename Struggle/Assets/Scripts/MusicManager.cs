@@ -8,11 +8,11 @@ public class MusicManager : MonoBehaviour
 	public AudioSource music;
 
 	//Audio tracks
+	public AudioClip titleScreen;
 	public AudioClip howToPlay;
-	public AudioClip jbsts;
-	public AudioClip kyoto527;
-	public AudioClip results;
 	public AudioClip selectAbilities;
+	public AudioClip [ ] gameplayTracks;
+	public AudioClip results;
 
 	//Audio manager
 	private const float FADE_TIME = 1.4f;
@@ -70,7 +70,7 @@ public class MusicManager : MonoBehaviour
 		switch ( destination )
 		{
 			case AudioContext.MainMenu:
-				track = jbsts;
+				track = titleScreen;
 				break;
 			case AudioContext.HowToPlay:
 				track = howToPlay;
@@ -79,13 +79,13 @@ public class MusicManager : MonoBehaviour
 				track = selectAbilities;
 				break;
 			case AudioContext.Gameplay:
-				track = kyoto527;
+				track = howToPlay;//gameplayTracks [ Random.Range ( 0, gameplayTracks.Length ) ];
 				break;
 			case AudioContext.Results:
 				track = results;
 				break;
 			default:
-				track = jbsts;
+				track = titleScreen;
 				break;
 		}
 

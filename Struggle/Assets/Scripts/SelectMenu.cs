@@ -45,7 +45,6 @@ public class SelectMenu : MonoBehaviour
 	private Dictionary < Button, Ability > abilitySelection = new Dictionary < Button, Ability > ( );
 	private Ability selectedAbility;
 	private PieceColor selectedPiece;
-	private List < PieceColor > sacrificedPieces = new List < PieceColor > ( );
 	private bool isPlayer1 = true;
 	private int currentSlot = 0;
 	private Dictionary < Button, PieceColor > buttonColors = new Dictionary < Button, PieceColor > ( );
@@ -98,6 +97,10 @@ public class SelectMenu : MonoBehaviour
 			Info.player1AbilityList [ i ] = null;
 			Info.player2AbilityList [ i ] = null;
 		}
+
+		//Clear sacrifice pieces
+		Info.player1Sacrifice = PieceColor.None;
+		Info.player2Sacrifice = PieceColor.None;
 
 		//Store the button colors
 		selected = sideBarButtons [ 0 ].colors;
@@ -201,30 +204,43 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Check if ability list is full
-			if ( !confirmPanel.gameObject.activeSelf )
-			{
-				//Unselect previous button
-				foreach ( Button a in sideBarButtons )
-					a.colors = unselected;
-				
-				//Change color
-				b.colors = selected;
-				
-				//Store selected ability
-				selectedAbility = new Ability ( abilitySelection [ b ] );
-				
-				//Make the ability description visible
-				abilityPanel.gameObject.SetActive ( true );
-				piecePanel.gameObject.SetActive ( false );
-				
-				//Load ability information
-				abilityName.text = selectedAbility.Name;
-				abilityDesc.text = selectedAbility.Desc;
-				
-				//Store selected button
-				selectedButton = b;
-			}
+			//Play SFX
+			SelectAbility ( b, true );
+		}
+	}
+
+	/// <summary>
+	/// Selects an ability for viewing.
+	/// </summary>
+	private void SelectAbility ( Button b, bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
+
+		//Check if ability list is full
+		if ( !confirmPanel.gameObject.activeSelf )
+		{
+			//Unselect previous button
+			foreach ( Button a in sideBarButtons )
+				a.colors = unselected;
+			
+			//Change color
+			b.colors = selected;
+			
+			//Store selected ability
+			selectedAbility = new Ability ( abilitySelection [ b ] );
+			
+			//Make the ability description visible
+			abilityPanel.gameObject.SetActive ( true );
+			piecePanel.gameObject.SetActive ( false );
+			
+			//Load ability information
+			abilityName.text = selectedAbility.Name;
+			abilityDesc.text = selectedAbility.Desc;
+			
+			//Store selected button
+			selectedButton = b;
 		}
 	}
 
@@ -236,27 +252,53 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Store the amount of abilities being auto assigned
-			autoAssignAmount = Info.player1AbilityList.Length - currentSlot;
+			//Play SFX
+			AutoAssignAbilities ( true );
+		}
+	}
+
+	/// <summary>
+	/// Randomly assigns the player's remaining abilities.
+	/// </summary>
+	private void AutoAssignAbilities ( bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.SelectAbility ( );
+
+		//Store the amount of abilities being auto assigned
+		autoAssignAmount = Info.player1AbilityList.Length - currentSlot;
+		
+		//Randomly assign each of the remaining ability slots open
+		for ( int i = 0; i < autoAssignAmount; i++ )
+		{
+			//Store the random number
+			int rand;
 			
-			//Randomly assign each of the remaining ability slots open
-			for ( int i = 0; i < autoAssignAmount; i++ )
+			do
 			{
-				//Store the random number
-				int rand;
-				
+				//Assign random number
+				rand = Random.Range ( 0, sideBarButtons.Length  );
+			} while ( !sideBarButtons [ rand ].IsInteractable ( ) );
+			
+			//Select the random ability
+			SelectAbility ( sideBarButtons [ rand ], false );
+			AcceptAbility ( false );
+			
+			//Check if a piece needs to be assigned
+			if ( selectedAbility != null && selectedAbility.AttachesToPiece )
+			{
 				do
 				{
 					//Assign random number
-					rand = Random.Range ( 0, sideBarButtons.Length  );
-				} while ( !sideBarButtons [ rand ].IsInteractable ( ) );
+					rand = Random.Range ( 0, pieceButtons.Length );
+				} while ( !pieceButtons [ rand ].IsInteractable ( ) );
 				
-				//Select the random ability
-				SelectAbility ( sideBarButtons [ rand ] );
-				AcceptAbility ( );
-				
-				//Check if a piece needs to be assigned
-				if ( selectedAbility != null && selectedAbility.AttachesToPiece )
+				//Attach ability to piece
+				AttachAbility ( pieceButtons [ rand ], false );
+
+				//Check for sacrifice
+				if ( selectedAbility != null && selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
 				{
 					do
 					{
@@ -264,36 +306,14 @@ public class SelectMenu : MonoBehaviour
 						rand = Random.Range ( 0, pieceButtons.Length );
 					} while ( !pieceButtons [ rand ].IsInteractable ( ) );
 					
-					//Attach ability to piece
-					AttachAbility ( pieceButtons [ rand ] );
-
-					//Check for sacrifice
-					if ( selectedAbility != null && selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
-					{
-						do
-						{
-							//Assign random number
-							rand = Random.Range ( 0, pieceButtons.Length );
-						} while ( !pieceButtons [ rand ].IsInteractable ( ) );
-						
-						//Sacrifice the first piece
-						AttachAbility ( pieceButtons [ rand ] );
-
-						do
-						{
-							//Assign random number
-							rand = Random.Range ( 0, pieceButtons.Length );
-						} while ( !pieceButtons [ rand ].IsInteractable ( ) );
-						
-						//Sacrifice the second piece
-						AttachAbility ( pieceButtons [ rand ] );
-					}
+					//Sacrifice the first piece
+					AttachAbility ( pieceButtons [ rand ], false );
 				}
 			}
-			
-			//Make the reassign button visible
-			reassignButton.SetActive ( true );
 		}
+		
+		//Make the reassign button visible
+		reassignButton.SetActive ( true );
 	}
 
 	/// <summary>
@@ -304,132 +324,145 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Move to previous slot
-			currentSlot--;
+			//Play SFX
+			RemoveAbility ( true );
+		}
+	}
 
-			//Close any open selection
-			if ( piecePanel.gameObject.activeSelf )
-				CancelAttachment ( );
-			
-			//Check current player
-			if ( isPlayer1 )
-			{
-				//Make highlight visible
-				player1Highlights [ currentSlot ].enabled = true;
-				
-				//Make next highlight invisible
-				if ( currentSlot + 1 < player1Highlights.Length )
-					player1Highlights [ currentSlot + 1 ].enabled = false;
-				
-				//Hide ability name
-				player1Abilities [ currentSlot ].text = "";
-				
-				//Hide ability piece
-				player1Pieces [ currentSlot ].enabled = false;
-				
-				//Reenable ability button
-				foreach ( Button b in sideBarButtons )
-				{
-					if ( Info.player1AbilityList [ currentSlot ].ID == abilitySelection [ b ].ID )
-					{
-						b.interactable = true;
-						break;
-					}
-				}
-				
-				//Reenable piece button
-				if ( Info.player1AbilityList [ currentSlot ].AttachesToPiece )
-				{
-					//Reenable select pieces
-					foreach ( Button b in pieceButtons )
-						if ( buttonColors [ b ] == Info.player1AbilityList [ currentSlot ].AttachedPiece )
-							b.interactable = true;
+	/// <summary>
+	/// Removes the last ability from the player's ability list.
+	/// </summary>
+	private void RemoveAbility ( bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
 
-					//Check for sacrificed pieces
-					if ( Info.player1AbilityList [ currentSlot ].ID == Ability.AbilityList.Sacrifice.ID )
-					{
-						//Reenable select piece
-						foreach ( Button b in pieceButtons )
-							if ( Info.player1SacrificeList.Contains ( buttonColors [ b ] ) )
-								b.interactable = true;
+		//Move to previous slot
+		currentSlot--;
 
-						//Clear sacrifice list
-						Info.player1SacrificeList.Clear ( );
-					}
-				}
-				
-				//Remove ability
-				Info.player1AbilityList [ currentSlot ] = null;
-			}
-			else
-			{
-				//Make highlight visible
-				player2Highlights [ currentSlot ].enabled = true;
-				
-				//Make next highlight invisible
-				if ( currentSlot + 1 < player2Highlights.Length )
-					player2Highlights [ currentSlot + 1 ].enabled = false;
-				
-				//Hide ability name
-				player2Abilities [ currentSlot ].text = "";
-				
-				//Hide ability piece
-				player2Pieces [ currentSlot ].enabled = false;
-				
-				//Reenable ability button
-				foreach ( Button b in sideBarButtons )
-				{
-					if ( Info.player2AbilityList [ currentSlot ].ID == abilitySelection [ b ].ID )
-					{
-						b.interactable = true;
-						break;
-					}
-				}
-				
-				//Reenable piece button
-				if ( Info.player2AbilityList [ currentSlot ].AttachesToPiece )
-				{
-					//Reenable selected pieces
-					foreach ( Button b in pieceButtons )
-						if ( buttonColors [ b ] == Info.player2AbilityList [ currentSlot ].AttachedPiece )
-							b.interactable = true;
-
-					//Check for sacrificed pieces
-					if ( Info.player2AbilityList [ currentSlot ].ID == Ability.AbilityList.Sacrifice.ID )
-					{
-						//Reenable select piece
-						foreach ( Button b in pieceButtons )
-							if ( Info.player2SacrificeList.Contains ( buttonColors [ b ] ) )
-								b.interactable = true;
-						
-						//Clear sacrifice list
-						Info.player2SacrificeList.Clear ( );
-					}
-				}
-				
-				//Remove ability
-				Info.player2AbilityList [ currentSlot ] = null;
-			}
+		//Close any open selection
+		if ( piecePanel.gameObject.activeSelf )
+			CancelAttachment ( false );
+		
+		//Check current player
+		if ( isPlayer1 )
+		{
+			//Make highlight visible
+			player1Highlights [ currentSlot ].enabled = true;
 			
-			//Hide all panels
-			abilityPanel.gameObject.SetActive ( false );
-			piecePanel.gameObject.SetActive ( false );
-			confirmPanel.gameObject.SetActive ( false );
+			//Make next highlight invisible
+			if ( currentSlot + 1 < player1Highlights.Length )
+				player1Highlights [ currentSlot + 1 ].enabled = false;
 			
-			//Activate auto assign button
-			autoAssignButton.interactable = true;
+			//Hide ability name
+			player1Abilities [ currentSlot ].text = "";
 			
-			//Unselect button
-			selectedButton = null;
+			//Hide ability piece
+			player1Pieces [ currentSlot ].enabled = false;
+			
+			//Reenable ability button
 			foreach ( Button b in sideBarButtons )
-				b.colors = unselected;
-			
-			//Check for first slot
-			if ( currentSlot == 0 )
 			{
-				//Deactivate undo button
-				undoButton.interactable = false;
+				if ( Info.player1AbilityList [ currentSlot ].ID == abilitySelection [ b ].ID )
+				{
+					b.interactable = true;
+					break;
+				}
 			}
+			
+			//Reenable piece button
+			if ( Info.player1AbilityList [ currentSlot ].AttachesToPiece )
+			{
+				//Reenable select pieces
+				foreach ( Button b in pieceButtons )
+					if ( buttonColors [ b ] == Info.player1AbilityList [ currentSlot ].AttachedPiece )
+						b.interactable = true;
+
+				//Check for sacrificed pieces
+				if ( Info.player1AbilityList [ currentSlot ].ID == Ability.AbilityList.Sacrifice.ID )
+				{
+					//Reenable select piece
+					foreach ( Button b in pieceButtons )
+						if ( Info.player1Sacrifice == buttonColors [ b ] )
+							b.interactable = true;
+
+					//Clear sacrifice list
+					Info.player1Sacrifice = PieceColor.None;
+				}
+			}
+			
+			//Remove ability
+			Info.player1AbilityList [ currentSlot ] = null;
+		}
+		else
+		{
+			//Make highlight visible
+			player2Highlights [ currentSlot ].enabled = true;
+			
+			//Make next highlight invisible
+			if ( currentSlot + 1 < player2Highlights.Length )
+				player2Highlights [ currentSlot + 1 ].enabled = false;
+			
+			//Hide ability name
+			player2Abilities [ currentSlot ].text = "";
+			
+			//Hide ability piece
+			player2Pieces [ currentSlot ].enabled = false;
+			
+			//Reenable ability button
+			foreach ( Button b in sideBarButtons )
+			{
+				if ( Info.player2AbilityList [ currentSlot ].ID == abilitySelection [ b ].ID )
+				{
+					b.interactable = true;
+					break;
+				}
+			}
+			
+			//Reenable piece button
+			if ( Info.player2AbilityList [ currentSlot ].AttachesToPiece )
+			{
+				//Reenable selected pieces
+				foreach ( Button b in pieceButtons )
+					if ( buttonColors [ b ] == Info.player2AbilityList [ currentSlot ].AttachedPiece )
+						b.interactable = true;
+
+				//Check for sacrificed pieces
+				if ( Info.player2AbilityList [ currentSlot ].ID == Ability.AbilityList.Sacrifice.ID )
+				{
+					//Reenable select piece
+					foreach ( Button b in pieceButtons )
+						if ( Info.player2Sacrifice == buttonColors [ b ] )
+							b.interactable = true;
+					
+					//Clear sacrifice list
+					Info.player2Sacrifice = PieceColor.None;
+				}
+			}
+			
+			//Remove ability
+			Info.player2AbilityList [ currentSlot ] = null;
+		}
+		
+		//Hide all panels
+		abilityPanel.gameObject.SetActive ( false );
+		piecePanel.gameObject.SetActive ( false );
+		confirmPanel.gameObject.SetActive ( false );
+		
+		//Activate auto assign button
+		autoAssignButton.interactable = true;
+		
+		//Unselect button
+		selectedButton = null;
+		foreach ( Button b in sideBarButtons )
+			b.colors = unselected;
+		
+		//Check for first slot
+		if ( currentSlot == 0 )
+		{
+			//Deactivate undo button
+			undoButton.interactable = false;
 		}
 	}
 
@@ -441,12 +474,19 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.Click ( );
+
 			//Clear ability list
 			for ( int i = 0; i < Info.player1AbilityList.Length; i++ )
 			{
 				Info.player1AbilityList [ i ] = null;
 				Info.player2AbilityList [ i ] = null;
 			}
+
+			//Clear sacrifice pieces
+			Info.player1Sacrifice = PieceColor.None;
+			Info.player2Sacrifice = PieceColor.None;
 			
 			//Load main menu
 			MusicManager.instance.ChangeMusic ( AudioContext.MainMenu );
@@ -464,21 +504,38 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Check if the ability attaches to a piece
-			if ( selectedAbility.AttachesToPiece )
-			{
-				//Make piece selection visible
-				piecePanel.gameObject.SetActive ( true );
-				abilityPanel.gameObject.SetActive ( false );
-				
-				//Load piece selection prompt
-				piecePrompt.text = "Assign the " + selectedAbility.Name + " ability to a piece.";
-			}
-			else
-			{
-				//Add ability to the player's ability list
-				AddAbility ( );
-			}
+			//Play SFX
+			AcceptAbility ( true );
+		}
+	}
+
+	/// <summary>
+	/// Accepts an ability for the player.
+	/// </summary>
+	private void AcceptAbility ( bool playSFX )
+	{
+		//Check if the ability attaches to a piece
+		if ( selectedAbility.AttachesToPiece )
+		{
+			//Play SFX
+			if ( playSFX )
+				SFXManager.instance.Click ( );
+
+			//Make piece selection visible
+			piecePanel.gameObject.SetActive ( true );
+			abilityPanel.gameObject.SetActive ( false );
+			
+			//Load piece selection prompt
+			piecePrompt.text = "Assign the " + selectedAbility.Name + " ability to a piece.";
+		}
+		else
+		{
+			//Play SFX
+			if ( playSFX )
+				SFXManager.instance.SelectAbility ( );
+
+			//Add ability to the player's ability list
+			AddAbility ( );
 		}
 	}
 
@@ -490,6 +547,9 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.AcceptAbilities ( );
+
 			//Reset current slot
 			currentSlot = 0;
 			
@@ -532,12 +592,15 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
+			//Play SFX
+			SFXManager.instance.SelectAbility ( );
+
 			//Remove the randomly assigned abilities
 			for ( int i = 0; i < autoAssignAmount; i++ )
-				RemoveAbility ( );
+				RemoveAbility ( false );
 			
 			//Reassign abilities
-			AutoAssignAbilities ( );
+			AutoAssignAbilities ( false );
 		}
 	}
 
@@ -712,22 +775,34 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Make ability description visible
-			abilityPanel.gameObject.SetActive ( true );
-			piecePanel.gameObject.SetActive ( false );
+			//Play SFX
+			CancelAttachment ( true );
+		}
+	}
 
-			//Check for sacrifice
-			if ( selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
-			{
-				//Reenable select pieces
-				foreach ( Button b in pieceButtons )
-					if ( selectedPiece == buttonColors [ b ] || sacrificedPieces.Contains ( buttonColors [ b ] ) )
-						b.interactable = true;
+	/// <summary>
+	/// Back out of attaching an ability to a piece.
+	/// </summary>
+	private void CancelAttachment ( bool playSFX )
+	{
+		//Play SFX
+		if ( playSFX )
+			SFXManager.instance.Click ( );
 
-				//Clear the sacrifice list
-				selectedPiece = PieceColor.None;
-				sacrificedPieces.Clear ( );
-			}
+		//Make ability description visible
+		abilityPanel.gameObject.SetActive ( true );
+		piecePanel.gameObject.SetActive ( false );
+
+		//Check for sacrifice
+		if ( selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
+		{
+			//Reenable select pieces
+			foreach ( Button b in pieceButtons )
+				if ( selectedPiece == buttonColors [ b ] )
+					b.interactable = true;
+
+			//Clear the sacrifice list
+			selectedPiece = PieceColor.None;
 		}
 	}
 
@@ -739,51 +814,57 @@ public class SelectMenu : MonoBehaviour
 		//Check input
 		if ( allowInput )
 		{
-			//Prevent ability stacking
-			b.interactable = false;
+			//Play SFX
+			AttachAbility ( b, true );
+		}
+	}
 
-			//Check for sacrifice
-			if ( selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
+	/// <summary>
+	/// Attachs the selected ability to a piece.
+	/// </summary>
+	private void AttachAbility ( Button b, bool playSFX )
+	{
+		//Prevent ability stacking
+		b.interactable = false;
+
+		//Check for sacrifice
+		if ( selectedAbility.ID == Ability.AbilityList.Sacrifice.ID )
+		{
+			//Check if a piece has been selected
+			if ( selectedPiece != PieceColor.None )
 			{
-				//Check if a piece has been selected
-				if ( selectedPiece != PieceColor.None )
-				{
-					//Add piece to the sacrifice list
-					sacrificedPieces.Add ( buttonColors [ b ] );
+				//Play SFX
+				SFXManager.instance.SelectAbility ( );
 
-					//Check if all the sacrifice pieces have been chosen
-					if ( sacrificedPieces.Count > 1 )
-					{
-						//Store the sacrificed pieces
-						if ( isPlayer1 )
-							foreach ( PieceColor p in sacrificedPieces )
-								Info.player1SacrificeList.Add ( p );
-						else
-							foreach ( PieceColor p in sacrificedPieces )
-								Info.player2SacrificeList.Add ( p );
-
-						//Add ability
-						AddAbility ( );
-
-						//Clear sacrifice list
-						sacrificedPieces.Clear ( );
-					}
-				}
+				//Store the sacrificed pieces
+				if ( isPlayer1 )
+					Info.player1Sacrifice = buttonColors [ b ];
 				else
-				{
-					//Store piece
-					selectedPiece = buttonColors [ b ];
+					Info.player2Sacrifice = buttonColors [ b ];
 
-					//Load piece selection prompt
-					piecePrompt.text = "Select two pieces to start without";
-				}
+				//Add ability
+				AddAbility ( );
 			}
 			else
 			{
-				//Add ability
+				//Play SFX
+				SFXManager.instance.Click ( );
+
+				//Store piece
 				selectedPiece = buttonColors [ b ];
-				AddAbility ( );
+
+				//Load piece selection prompt
+				piecePrompt.text = "Select two pieces to start without";
 			}
+		}
+		else
+		{
+			//Play SFX
+			SFXManager.instance.SelectAbility ( );
+
+			//Add ability
+			selectedPiece = buttonColors [ b ];
+			AddAbility ( );
 		}
 	}
 

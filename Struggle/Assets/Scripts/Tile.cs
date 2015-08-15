@@ -54,8 +54,8 @@ public class Tile : MonoBehaviour
 	public Piece currentPiece;
 	public SpriteRenderer sprite;
 	public TileState state;
-	public bool isP1ZapArea = false;
-	public bool isP2ZapArea = false;
+	public bool isP1GoalArea = false;
+	public bool isP2GoalArea = false;
 
 	//Animation information
 	private const float ANIMATE_TIME = 0.5f;
@@ -152,9 +152,6 @@ public class Tile : MonoBehaviour
 
 		//Change state
 		state = TileState.PotentialMove;
-		
-		//Check zap area
-		CheckZapAreaHighlights ( );
 	}
 
 	/// <summary>
@@ -170,9 +167,6 @@ public class Tile : MonoBehaviour
 
 		//Change state
 		state = TileState.PotentialJump;
-
-		//Check zap area
-		CheckZapAreaHighlights ( );
 	}
 
 	/// <summary>
@@ -189,9 +183,6 @@ public class Tile : MonoBehaviour
 		//Check for potential capture
 		if ( state == TileState.PotentialJump )
 			HighlightSelectedCapture ( );
-
-		//Check zap area
-		CheckZapAreaCaptures ( );
 	}
 
 	/// <summary>
@@ -347,189 +338,136 @@ public class Tile : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Checks if white can potentially move into the zap area, and highlights any potential captures.
-	/// </summary>
-	private void CheckZapAreaHighlights ( )
-	{
-		//Check if move will land in zap area
-		if ( isP1ZapArea && info.currentPlayer == info.player1 && info.selectedPiece.color == PieceColor.White )
-		{
-			//Highlight each potential capture in zap area
-			foreach ( Tile t in info.opponent.zapTiles )
-			{
-				//Check for pieces
-				if ( t.currentPiece != null && t.currentPiece.owner == info.opponent )
-					t.HighlightPotentialCapture ( );
-			}
-		}
-		else if ( isP2ZapArea && info.currentPlayer == info.player2 && info.selectedPiece.color == PieceColor.White )
-		{
-			//Highlight each potential capture in zap area
-			foreach ( Tile t in info.opponent.zapTiles )
-			{
-				//Check for pieces
-				if ( t.currentPiece != null && t.currentPiece.owner == info.opponent )
-					t.HighlightPotentialCapture ( );
-			}
-		}
-	}
-
-	/// <summary>
-	/// Checks if white can potentially move into the zap area, and highlights any potential captures.
-	/// </summary>
-	private void CheckZapAreaCaptures ( )
-	{
-		//Check if move will land in zap area
-		if ( isP1ZapArea && info.currentPlayer == info.player1 && info.selectedPiece.color == PieceColor.White )
-		{
-			//Highlight each potential capture in zap area
-			foreach ( Tile t in info.opponent.zapTiles )
-			{
-				//Check for pieces
-				if ( t.currentPiece != null && t.currentPiece.owner == info.opponent )
-					t.sprite.color = tileColors [ TileStateColor.AvailableCaptureHover ];
-			}
-		}
-		else if ( isP2ZapArea && info.currentPlayer == info.player2 && info.selectedPiece.color == PieceColor.White )
-		{
-			//Highlight each potential capture in zap area
-			foreach ( Tile t in info.opponent.zapTiles )
-			{
-				//Check for pieces
-				if ( t.currentPiece != null && t.currentPiece.owner == info.opponent )
-					t.sprite.color = tileColors [ TileStateColor.AvailableCaptureHover ];
-			}
-		}
-	}
-
-	/// <summary>
 	/// Show the player's currently selected piece's movement options.
 	/// </summary>
 	public void SelectPiece ( )
 	{
-		//Store selected piece
-		info.selectedPiece = currentPiece;
-
-		//Reset board
-		info.ResetBoardColor ( );
-		if ( info.beginningOfTurn && !currentPiece.isJolted )
-			info.HighlightCurrentPlayerPieces ( );
-
-		//Highlight selected piece
-		HighlightSelectedPiece ( );
-
-		//Highlight tile
-		sprite.color = tileColors [ TileStateColor.SelectedPiece ];
-			
-		//Display zap area for white
-		if ( info.selectedPiece.color == PieceColor.White )
-			info.currentPlayer.zapArea.SetActive ( true );
-
-		//Store direction
-		int start, end;
-
-		//Check player
-		if ( currentPiece.owner == info.player1 ) 
+		//Check if game is over
+		if ( !info.isGameOver )
 		{
-			//Section off tiles to move right
-			start = 2;
-			end = 6;
-		} 
-		else 
-		{
-			//Section off tiles to move left
-			start = 0;
-			end = 4;
-		}
+			//Store selected piece
+			info.selectedPiece = currentPiece;
 
-		//Track turn
-		bool additionalMove = false;
+			//Reset board
+			info.ResetBoardColor ( );
+			if ( info.beginningOfTurn && !currentPiece.isJolted )
+				info.HighlightCurrentPlayerPieces ( );
 
-		//Check neighboring tiles
-		for ( int i = start; i < end; i++ ) 
-		{
-			//Check for tile
-			if ( neighbors [ i ] != null )
+			//Highlight selected piece
+			HighlightSelectedPiece ( );
+
+			//Highlight tile
+			sprite.color = tileColors [ TileStateColor.SelectedPiece ];
+				
+			//Display goal area for white
+			if ( info.selectedPiece.color == PieceColor.White )
+				info.currentPlayer.goalArea.SetActive ( true );
+
+			//Store direction
+			int start, end;
+
+			//Check player
+			if ( currentPiece.owner == info.player1 ) 
 			{
-				//Check for piece 
-				if ( neighbors [ i ].currentPiece != null )
+				//Section off tiles to move right
+				start = 2;
+				end = 6;
+			} 
+			else 
+			{
+				//Section off tiles to move left
+				start = 0;
+				end = 4;
+			}
+
+			//Track turn
+			bool additionalMove = false;
+
+			//Check neighboring tiles
+			for ( int i = start; i < end; i++ ) 
+			{
+				//Check for tile
+				if ( neighbors [ i ] != null )
 				{
-					//Check for jump space
-					if ( neighbors [ i ].neighbors [ i ] != null && neighbors [ i ].neighbors [ i ].currentPiece == null && !currentPiece.IsPrevTile ( neighbors [ i ].neighbors [ i ] ) )
+					//Check for piece 
+					if ( neighbors [ i ].currentPiece != null )
 					{
-						//Check for nonagression pacts
-						if ( neighbors [ i ].currentPiece.owner != info.currentPlayer && neighbors [ i ].currentPiece.nonagressionPartners.Contains ( currentPiece.color ) )
-							continue;
-
-						//Check if piece is friendly 
-						if ( neighbors [ i ].currentPiece.owner != info.currentPlayer && !Ability.AbilityList.HasPacifist ( info.selectedPiece, info ) && !Ability.AbilityList.HasPacifist ( neighbors [ i ].currentPiece, info ) )
+						//Check for jump space
+						if ( neighbors [ i ].neighbors [ i ] != null && neighbors [ i ].neighbors [ i ].currentPiece == null && !currentPiece.IsPrevTile ( neighbors [ i ].neighbors [ i ] ) )
 						{
-							//Highlight potential capture
-							neighbors [ i ].HighlightPotentialCapture ( );
+							//Check for nonagression pacts
+							if ( neighbors [ i ].currentPiece.owner != info.currentPlayer && neighbors [ i ].currentPiece.nonagressionPartners.Contains ( currentPiece.color ) )
+								continue;
+
+							//Check if piece is friendly 
+							if ( neighbors [ i ].currentPiece.owner != info.currentPlayer && !Ability.AbilityList.HasPacifist ( info.selectedPiece, info ) && !Ability.AbilityList.HasPacifist ( neighbors [ i ].currentPiece, info ) )
+							{
+								//Highlight potential capture
+								neighbors [ i ].HighlightPotentialCapture ( );
+							}
+
+							//Allow turn to continue
+							if ( !info.beginningOfTurn )
+								additionalMove = true;
+
+							//Highlight potential jump
+							neighbors [ i ].neighbors [ i ].HighlightPotentialJump ( );
 						}
-
-						//Allow turn to continue
-						if ( !info.beginningOfTurn )
-							additionalMove = true;
-
-						//Highlight potential jump
-						neighbors [ i ].neighbors [ i ].HighlightPotentialJump ( );
+					}
+					else
+					{
+						//Check if it is the beginning of the turn and for previous tile 
+						if ( info.beginningOfTurn && !currentPiece.IsPrevTile ( neighbors [ i ] ) )
+							neighbors [ i ].HighlightPotentialMove ( );
 					}
 				}
-				else
-				{
-					//Check if it is the beginning of the turn and for previous tile 
-					if ( info.beginningOfTurn && !currentPiece.IsPrevTile ( neighbors [ i ] ) )
-						neighbors [ i ].HighlightPotentialMove ( );
-				}
 			}
-		}
 
-		//Check for catapult ability
-		if ( info.beginningOfTurn && currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Catapult.ID && !currentPiece.isJolted )
-		{
-			//Highlight catapult tiles
-			Ability.AbilityList.GetCatapult ( this, start, end, info );
-		}
-
-		//Check for sacrifice ability
-		if ( currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Sacrifice.ID )
-		{
-			//Highlight any missed sacrifice tiles
-			Ability.AbilityList.GetSacrifice ( this, start, end, info );
-		}
-
-		//Check for teleport ability
-		if ( info.beginningOfTurn && currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Teleport.ID && !currentPiece.isJolted )
-		{
-			//Highlight teleport tiles
-			Ability.AbilityList.GetTeleport ( this, start, end, 2 );
-		}
-
-		//Check for torus ability
-		if ( currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Torus.ID && !currentPiece.isJolted )
-		{
-			//Get torus tiles
-			bool torusAdditionalMove = Ability.AbilityList.GetTorus ( this, start, end, info );
-
-			//Set any additional moves from torus
-			if ( !additionalMove )
-				additionalMove = torusAdditionalMove;
-		}
-
-		//Check if it is the beginning of the turn
-		if ( !info.beginningOfTurn )
-		{
-			//Check for addition moves
-			if ( additionalMove )
+			//Check for catapult ability
+			if ( info.beginningOfTurn && currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Catapult.ID && !currentPiece.isJolted )
 			{
-				//Make the end turn button visible
-				info.currentPlayer.endButton.SetActive ( true );
+				//Highlight catapult tiles
+				Ability.AbilityList.GetCatapult ( this, start, end, info );
 			}
-			else
-				info.EndTurn ( );
-		}
-			
+
+			//Check for sacrifice ability
+			if ( currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Sacrifice.ID )
+			{
+				//Highlight any missed sacrifice tiles
+				Ability.AbilityList.GetSacrifice ( this, start, end, info );
+			}
+
+			//Check for teleport ability
+			if ( info.beginningOfTurn && currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Teleport.ID && !currentPiece.isJolted )
+			{
+				//Highlight teleport tiles
+				Ability.AbilityList.GetTeleport ( this, start, end, 2 );
+			}
+
+			//Check for torus ability
+			if ( currentPiece.ability != null && currentPiece.ability.ID == Ability.AbilityList.Torus.ID && !currentPiece.isJolted )
+			{
+				//Get torus tiles
+				bool torusAdditionalMove = Ability.AbilityList.GetTorus ( this, start, end, info );
+
+				//Set any additional moves from torus
+				if ( !additionalMove )
+					additionalMove = torusAdditionalMove;
+			}
+
+			//Check if it is the beginning of the turn
+			if ( !info.beginningOfTurn )
+			{
+				//Check for addition moves
+				if ( additionalMove )
+				{
+					//Make the end turn button visible
+					info.currentPlayer.endButton.SetActive ( true );
+				}
+				else
+					info.EndTurn ( );
+			}
+		}	
 	}
 
 	/// <summary>
@@ -566,32 +504,18 @@ public class Tile : MonoBehaviour
 			.OnComplete ( () =>
 			{
 				//Check white reaching its goal
-				if ( this == info.currentPlayer.goal && currentPiece.color == PieceColor.White ) 
+				if ( currentPiece.color == PieceColor.White && ( ( info.currentPlayer == info.player1 && isP1GoalArea ) || ( info.currentPlayer == info.player2 && isP2GoalArea ) ) ) 
 				{
 					//End the game
 					info.WinGame ( );
 					return;
 				}
 
-				//Check in case game was won
-				if ( !info.isGameOver )
-				{
-					//Check white reaching its zap area
-					if ( ( isP1ZapArea && info.currentPlayer == info.player1 && currentPiece.color == PieceColor.White ) || ( isP2ZapArea && info.currentPlayer == info.player2 && currentPiece.color == PieceColor.White ) )
-					{
-						//Zap pieces
-						ZapPieces ( isJump );
-
-						//Don't end the move just yet
-						return;
-					}
-
-					//Check follow up
-					if ( isJump )
-						SelectPiece ( );
-					else
-						info.EndTurn ( );
-				}
+				//Check follow up
+				if ( isJump )
+					SelectPiece ( );
+				else
+					info.EndTurn ( );
 			} );
 	}
 
@@ -708,68 +632,6 @@ public class Tile : MonoBehaviour
 				}
 			} )
 			.Play ( );
-	}
-
-	/// <summary>
-	/// Zaps any of the oppenent's pieces once the white piece reachs the zap area.
-	/// </summary>
-	private void ZapPieces ( bool isJump )
-	{
-		//Set up animation
-		Sequence s = DOTween.Sequence ( );
-
-		//Keep list of zapped pieces
-		List < Piece > zapped = new List < Piece > ( );
-
-		//Check oppenent's zap area
-		foreach ( Tile t in info.opponent.zapTiles )
-		{
-			//Check for pieces to zap
-			if ( t.currentPiece != null && t.currentPiece.owner == info.opponent )
-			{
-				//Add piece to list
-				zapped.Add ( t.currentPiece );
-
-				//Set animation
-				s.Insert ( 0, t.sprite.DOColor ( Color.white, ANIMATE_TIME ) )
-					.Insert ( 0, t.currentPiece.sprite.DOFade ( 0, ANIMATE_TIME ) )
-					.Insert ( ANIMATE_TIME, t.sprite.DOColor ( tileColors [ TileStateColor.Normal ], ANIMATE_TIME ) );
-			}
-		}
-
-		//Add callback
-		s.OnComplete ( () =>
-		{
-			//Remove each zapped piece
-			foreach ( Piece p in zapped )
-			{
-				//Check for white capture
-				if ( p.color == PieceColor.White )
-				{
-					//End the game
-					info.WinGame ( );
-					return;
-				}
-				//Disable the captured piece's ability if it has one
-				if ( p.ability != null )
-					info.DisableAbility ( p.ability.ID, p.owner );
-
-				//Remove piece reference from the tile
-				p.currentTile.currentPiece = null;
-				
-				//Remove piece from opponent
-				p.owner.pieces.Remove ( p );
-				
-				//Delete piece
-				p.Capture ( );
-			}
-
-			//Check follow up
-			if ( isJump )
-				SelectPiece ( );
-			else
-				info.EndTurn ( );
-		} );
 	}
 
 	/// <summary>
@@ -973,6 +835,9 @@ public class Tile : MonoBehaviour
 	/// </summary>
 	public void MouseClick ( )
 	{
+		//Play SFX
+		SFXManager.instance.Click ( );
+
 		//Check state
 		switch ( state ) 
 		{

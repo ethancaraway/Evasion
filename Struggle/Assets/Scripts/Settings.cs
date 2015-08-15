@@ -49,12 +49,12 @@ public class Settings : MonoBehaviour
 	/// <summary>
 	/// This save data determines the pieces player 1 sacrificed.
 	/// </summary>
-	public static Vector2 SaveDataP1SacrificePieces;
+	public static int SaveDataP1Sacrifice;
 
 	/// <summary>
 	/// This save data determines the pieces player 2 sacrificed.
 	/// </summary>
-	public static Vector2 SaveDataP2SacrificePieces;
+	public static int SaveDataP2Sacrifice;
 
 	/// <summary>
 	/// This save data determines the game clock setting of the save game.
@@ -193,26 +193,26 @@ public class Settings : MonoBehaviour
 			if ( PlayerPrefs.HasKey ( "player1Sacrifice" ) )
 			{
 				//Load save data
-				SaveDataP1SacrificePieces = PlayerPrefsX.GetVector2 ( "player1Sacrifice", Vector2.zero );
+				SaveDataP1Sacrifice = PlayerPrefs.GetInt ( "player1Sacrifice", 0 );
 			}
 			else
 			{
 				//Set empty save data
-				SaveDataP1SacrificePieces = Vector2.zero;
-				PlayerPrefsX.SetVector2 ( "player1Sacrifice", SaveDataP1SacrificePieces );
+				SaveDataP1Sacrifice = 0;
+				PlayerPrefs.SetInt ( "player1Sacrifice", SaveDataP1Sacrifice );
 			}
 
 			//Check for player 2's sacrificed pieces save data
 			if ( PlayerPrefs.HasKey ( "player2Sacrifice" ) )
 			{
 				//Load save data
-				SaveDataP2SacrificePieces = PlayerPrefsX.GetVector2 ( "player2Sacrifice", Vector2.zero );
+				SaveDataP2Sacrifice = PlayerPrefs.GetInt ( "player2Sacrifice", 0 );
 			}
 			else
 			{
 				//Set empty save data
-				SaveDataP2SacrificePieces = Vector2.zero;
-				PlayerPrefsX.SetVector2 ( "player2Sacrifice", SaveDataP2SacrificePieces );
+				SaveDataP2Sacrifice = 0;
+				PlayerPrefs.SetInt ( "player2Sacrifice", SaveDataP2Sacrifice );
 			}
 
 			//Check for game clock setting save data
