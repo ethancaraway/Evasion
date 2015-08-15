@@ -1158,7 +1158,7 @@ public class Abilities
 		(
 			12,
 			"Sacrifice",
-			"Sacrifice doubles the movement of a piece in exchange for the player starting the game with two fewer pieces.",
+			"Sacrifice doubles the movement of a piece in exchange for the player starting the game with one less piece.",
 			true
 		);
 
