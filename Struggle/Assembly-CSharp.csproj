@@ -47,18 +47,21 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\PlayerPrefsX.cs" />
-     <Compile Include="Assets\Scripts\Ability.cs" />
-     <Compile Include="Assets\Scripts\Info.cs" />
-     <Compile Include="Assets\Scripts\MainMenu.cs" />
-     <Compile Include="Assets\Scripts\MusicManager.cs" />
-     <Compile Include="Assets\Scripts\Piece.cs" />
-     <Compile Include="Assets\Scripts\Player.cs" />
-     <Compile Include="Assets\Scripts\RulesMenu.cs" />
-     <Compile Include="Assets\Scripts\SFXManager.cs" />
-     <Compile Include="Assets\Scripts\SelectMenu.cs" />
-     <Compile Include="Assets\Scripts\Settings.cs" />
-     <Compile Include="Assets\Scripts\StartGameMenu.cs" />
-     <Compile Include="Assets\Scripts\Tile.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Ability.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Info.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Piece.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Player.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Tile.cs" />
+     <Compile Include="Assets\Scripts\Gameplay\Turn.cs" />
+     <Compile Include="Assets\Scripts\Misc_\CameraFit.cs" />
+     <Compile Include="Assets\Scripts\Misc_\MusicManager.cs" />
+     <Compile Include="Assets\Scripts\Misc_\SFXManager.cs" />
+     <Compile Include="Assets\Scripts\Misc_\Settings.cs" />
+     <Compile Include="Assets\Scripts\Scene\MainMenu.cs" />
+     <Compile Include="Assets\Scripts\Scene\RulesMenu.cs" />
+     <Compile Include="Assets\Scripts\Scene\SelectMenu.cs" />
+     <Compile Include="Assets\Scripts\Scene\StartGameMenu.cs" />
+     <Compile Include="Assets\Scripts\Scene\Tutorial.cs" />
      <None Include="Assets\Demigiant\DOTween\readme.txt" />
      <None Include="Assets\Demigiant\DOTween\DOTween50.xml" />
      <None Include="Assets\Demigiant\DOTween\DOTween43.xml" />
